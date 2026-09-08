@@ -8,10 +8,10 @@ header_start:
 	dd header_end - header_start; comes out to 0x00000010 (header length)
 	dd -(0xE85250D6 + 0 + (header_end - header_start)); checksum
 
-	; Multiboot2 end tag
-    dw 0
-    dw 0
-    dd 8
+	;  Multiboot2 end tag
+	dw 0
+	dw 0
+	dd 8
 
 header_end:
 
@@ -34,7 +34,7 @@ _start:
 
 	xor eax, eax
 
-	; pml4 -> pdpt -> pd
+	;   pml4 -> pdpt -> pd
 	mov eax, pdpt
 	or  eax, 0x3
 	mov [pml4], eax
@@ -46,43 +46,42 @@ _start:
 	mov dword [pdpt + 4], 0
 
 	mov edi, pd
-    xor eax, eax; will act as current physical address
-    mov ecx, 512; this will act as the loop counter
-
+	xor eax, eax; will act as current physical address
+	mov ecx, 512; this will act as the loop counter
 
 .map_pd:
-    mov edx, eax
-	; FLAGS
-	; 0x01 → present
-	; 0x02 → writable
-	; 0x80 → page size (2 MiB)
-	; 0x01 + 0x02 + 0x80 = 0x83
-    or edx, 0x83
-    mov [edi], edx
+	mov edx, eax
+	;   FLAGS
+	;   0x01 → present
+	;   0x02 → writable
+	;   0x80 → page size (2 MiB)
+	;   0x01 + 0x02 + 0x80 = 0x83
+	or  edx, 0x83
+	mov [edi], edx
 	mov dword [edi + 4], 0
 
-    add eax, 0x200000; advance physical address by 2 MiB
-    add edi, 8; similarly add 8 bytes for one pd entry
+	add eax, 0x200000; advance physical address by 2 MiB
+	add edi, 8; similarly add 8 bytes for one pd entry
 
-    loop .map_pd
+	loop .map_pd
 
 	mov eax, pml4
 	mov cr3, eax; cr3 register points to top level page table
 
-	; enabling Physical Address Extension
+	;   enabling Physical Address Extension
 	mov eax, cr4; cr4 contains bunch of config bits for the cpu
-	or eax, 1 << 5; set bit 5 (PAE bit)
+	or  eax, 1 << 5; set bit 5 (PAE bit)
 	mov cr4, eax
 
-	; enabling long mode
+	;   enabling long mode
 	mov ecx, 0xC0000080; msr address for EFER
 	rdmsr
-	or eax, 1 << 8; set lme bit
+	or  eax, 1 << 8; set lme bit
 	wrmsr
 
-	; enabling paging
+	;   enabling paging
 	mov eax, cr0
-	or eax, 1 << 31; set paging enable bit
+	or  eax, 1 << 31; set paging enable bit
 	mov cr0, eax
 
 	jmp 0x08: long_mode_start; use gdt entry 1 as code segment (0x08)
@@ -90,7 +89,7 @@ _start:
 bits 64
 
 long_mode_start:
-	mov rsp, stack_top
+	mov  rsp, stack_top
 	call kernel_main
 
 .hang:
@@ -121,16 +120,19 @@ gdt_descriptor:
 	section .bss
 
 	align 4096
-	pml4:
-		resb 4096
+
+pml4:
+	resb 4096
 
 	align 4096
-	pdpt:
-		resb 4096
+
+pdpt:
+	resb 4096
 
 	align 4096
-	pd:
-		resb 4096
+
+pd:
+	resb 4096
 
 	align 16; stack alignment is specified at divisible by 16
 

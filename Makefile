@@ -2,7 +2,7 @@ AS = nasm
 CC = gcc
 LD = ld
 
-CFLAGS = -ffreestanding -mno-red-zone -m64
+CFLAGS = -ffreestanding -mno-red-zone -m64 -Iinclude
 LDFLAGS = -m elf_x86_64 -T linker.ld
 
 all: kernel.elf
@@ -13,8 +13,11 @@ boot.o: boot/boot.asm
 kernel.o: kernel/kernel.c
 	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel.o
 
-kernel.elf: boot.o kernel.o linker.ld
-	$(LD) $(LDFLAGS) -o kernel.elf boot.o kernel.o
+terminal.o: kernel/terminal.c
+	$(CC) $(CFLAGS) -c kernel/terminal.c -o terminal.o
+
+kernel.elf: boot.o kernel.o terminal.o linker.ld
+	$(LD) $(LDFLAGS) -o kernel.elf boot.o terminal.o kernel.o
 
 iso: kernel.elf
 	cp kernel.elf iso/boot/kernel.elf
