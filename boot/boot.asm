@@ -89,6 +89,12 @@ _start:
 bits 64
 
 long_mode_start:
+	mov ax, 0x10
+
+	mov ds, ax
+	mov es, ax
+	mov ss, ax
+
 	mov  rsp, stack_top
 	call kernel_main
 

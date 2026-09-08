@@ -16,8 +16,17 @@ kernel.o: kernel/kernel.c
 terminal.o: kernel/terminal.c
 	$(CC) $(CFLAGS) -c kernel/terminal.c -o terminal.o
 
-kernel.elf: boot.o kernel.o terminal.o linker.ld
-	$(LD) $(LDFLAGS) -o kernel.elf boot.o terminal.o kernel.o
+idt.o: kernel/idt.c
+	$(CC) $(CFLAGS) -c kernel/idt.c -o idt.o
+
+idt_load.o: kernel/idt_load.asm
+	$(AS) -f elf64 kernel/idt_load.asm -o idt_load.o
+
+isr.o: kernel/isr.asm
+	$(AS) -f elf64 kernel/isr.asm -o isr.o
+
+kernel.elf: boot.o kernel.o terminal.o idt.o idt_load.o isr.o linker.ld
+	$(LD) $(LDFLAGS) -o kernel.elf boot.o terminal.o idt.o idt_load.o isr.o kernel.o
 
 iso: kernel.elf
 	cp kernel.elf iso/boot/kernel.elf
@@ -27,4 +36,4 @@ run: iso
 	DISPLAY=:1 qemu-system-x86_64 -cdrom anios.iso -display gtk
 
 clean:
-	rm -f boot.o kernel.o kernel.elf anios.iso
+	rm -f *.o kernel.elf anios.iso
