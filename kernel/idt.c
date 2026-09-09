@@ -37,4 +37,10 @@ void idt_initialize(void) {
     idt_load((uint64_t)&idt_descriptor);
 }
 
-void interrupt_handler(void) { terminal_write("INTERRUPT\n"); }
+void interrupt_handler(struct interrupt_frame *frame) {
+    terminal_write("EXCEPTION: Divide Error\n");
+    terminal_write("SYSTEM HALTED\n");
+    for (;;) {
+        asm volatile("hlt");
+    }
+}

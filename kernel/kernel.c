@@ -1,5 +1,6 @@
 #include "idt.h"
 #include "terminal.h"
+#include <stdint.h>
 void kernel_main(void) {
     terminal_initialize();
 

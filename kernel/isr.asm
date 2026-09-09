@@ -33,9 +33,9 @@ isr0:
 	;    8 byte dummy push for stack alignment to 16 bytes
 	push qword 0
 
+	add  rsp, 8; undo dummy push
+	mov  rdi, rsp
 	call interrupt_handler
-
-	add rsp, 8; undo dummy push
 
 	pop r15
 	pop r14
