@@ -8,7 +8,11 @@ void kernel_main(void) {
 
     idt_initialize();
 
-    asm volatile("int $0");
+    // asm volatile("int $0");
+    volatile int a = 10;
+    volatile int b = 0;
+    volatile int c = a / b;
+    (void)c;
 
     terminal_write("Back from interrupt\n");
 }
