@@ -30,12 +30,29 @@ isr0:
 	push r14
 	push r15
 
-	;    8 byte dummy push for stack alignment to 16 bytes
-	push qword 0
+	push qword 0; fake error code
+	push qword 0; vector number
 
-	add  rsp, 8; undo dummy push
-	mov  rdi, rsp
+	mov rdi, rsp; save address of interrupt frame (arg 1 in c function)
+
+	test rsp, 8; rsp AND 0x8
+	;    this is set to 0 if its 16-bit aligned
+	jz   .aligned
+
+	;    otherwise, move down by 8 to align
+	;    the call itself pushed an 8-byte return address
+	;    afterwards add rsp, 8  restores the stack to before alignment adjustment
+	sub  rsp, 8
 	call interrupt_handler
+	add  rsp, 8
+	jmp  .restore
+
+.aligned:
+	call interrupt_handler
+
+.restore:
+
+	add rsp, 16; removes vector and error code
 
 	pop r15
 	pop r14

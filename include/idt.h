@@ -20,6 +20,9 @@ struct idt_descriptor {
 } __attribute__((packed));
 
 struct interrupt_frame {
+    uint64_t vector;
+    uint64_t error_code;
+
     uint64_t r15;
     uint64_t r14;
     uint64_t r13;

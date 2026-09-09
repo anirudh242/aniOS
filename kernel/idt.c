@@ -38,8 +38,12 @@ void idt_initialize(void) {
 }
 
 void interrupt_handler(struct interrupt_frame *frame) {
-    terminal_write("EXCEPTION: Divide Error\n");
-    terminal_write("SYSTEM HALTED\n");
+    if (frame->vector == 0) {
+        terminal_write("EXCEPTION: Divide Error\n");
+        terminal_write("SYSTEM HALTED\n");
+    } else {
+        terminal_write("EXCEPTION: Unknown\n");
+    }
     for (;;) {
         asm volatile("hlt");
     }
