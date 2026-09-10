@@ -14,6 +14,11 @@
 	; ORDER OF REGISTERS IS IMPORTANT
 
 isr0:
+	push qword 0; fake error code
+	push qword 0; vector number
+	jmp  isr_common
+
+isr_common:
 	push rax
 	push rbx
 	push rcx
@@ -29,9 +34,6 @@ isr0:
 	push r13
 	push r14
 	push r15
-
-	push qword 0; fake error code
-	push qword 0; vector number
 
 	mov rdi, rsp; save address of interrupt frame (arg 1 in c function)
 
