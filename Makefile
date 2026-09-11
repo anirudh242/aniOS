@@ -35,5 +35,8 @@ iso: kernel.elf
 run: iso
 	DISPLAY=:1 qemu-system-x86_64 -cdrom anios.iso -display gtk
 
+debug: iso
+	DISPLAY=:1 qemu-system-x86_64 -cdrom anios.iso -display gtk -S -s
+
 clean:
 	rm -f *.o kernel.elf anios.iso

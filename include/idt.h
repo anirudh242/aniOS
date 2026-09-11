@@ -47,6 +47,8 @@ struct interrupt_frame {
 void idt_initialize(void);
 void idt_load(uint64_t address);
 
-extern void isr0(void);
+extern void isr0(void); // div by 0
+extern void isr6(void); // invalid opcode
+extern void isr13(void);
 
 #endif

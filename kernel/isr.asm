@@ -6,6 +6,9 @@
 	section .text
 
 	global isr0
+	global isr6
+	global isr13
+
 	extern interrupt_handler
 
 	; we push all gprs into rsp to preserve them before the interrupt call
@@ -13,9 +16,27 @@
 	; once its done with the interrupt, we pop all of them to return back to where we were
 	; ORDER OF REGISTERS IS IMPORTANT
 
+	; to implement an interrupt use the structure:
+	; push qword [error_code]
+	; push qword [vector]
+	; jmp isr_common
+
 isr0:
+	;    div by 0 exception
 	push qword 0; fake error code
 	push qword 0; vector number
+	jmp  isr_common
+
+isr6:
+	;    invalid opcode exception
+	push qword 0
+	push qword 6
+	jmp  isr_common
+
+isr13:
+	;    General Protection Fault
+	;    No pushing error code here as CPU provides one
+	push qword 13
 	jmp  isr_common
 
 isr_common:

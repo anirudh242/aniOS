@@ -30,6 +30,8 @@ void idt_initialize(void) {
     }
 
     idt_set_gate(0, (uint64_t)isr0);
+    idt_set_gate(6, (uint64_t)isr6);
+    idt_set_gate(13, (uint64_t)isr13);
 
     idt_descriptor.limit = sizeof(idt) - 1;
     idt_descriptor.base = (uint64_t)idt;
@@ -41,6 +43,10 @@ void interrupt_handler(struct interrupt_frame *frame) {
     if (frame->vector == 0) {
         terminal_write("EXCEPTION: Divide Error\n");
 
+    } else if (frame->vector == 6) {
+        terminal_write("EXCEPTION: Invalid opcode\n");
+    } else if (frame->vector == 13) {
+        terminal_write("EXCEPTION: General Protection Fault\n");
     } else {
         terminal_write("EXCEPTION: Unknown\n");
     }
