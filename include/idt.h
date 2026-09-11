@@ -3,6 +3,44 @@
 
 #include <stdint.h>
 
+#define ISR_LIST                                                               \
+    X(0)                                                                       \
+    X(1)                                                                       \
+    X(2)                                                                       \
+    X(3)                                                                       \
+    X(4)                                                                       \
+    X(5)                                                                       \
+    X(6)                                                                       \
+    X(7)                                                                       \
+    X(8)                                                                       \
+    X(9)                                                                       \
+    X(10)                                                                      \
+    X(11)                                                                      \
+    X(12)                                                                      \
+    X(13)                                                                      \
+    X(14)                                                                      \
+    X(15)                                                                      \
+    X(16)                                                                      \
+    X(17)                                                                      \
+    X(18)                                                                      \
+    X(19)                                                                      \
+    X(20)                                                                      \
+    X(21)                                                                      \
+    X(22)                                                                      \
+    X(23)                                                                      \
+    X(24)                                                                      \
+    X(25)                                                                      \
+    X(26)                                                                      \
+    X(27)                                                                      \
+    X(28)                                                                      \
+    X(29)                                                                      \
+    X(30)                                                                      \
+    X(31)
+
+#define X(n) extern void isr##n(void);
+ISR_LIST
+#undef X
+
 struct idt_entry {
     uint16_t offset_1; // offset bits 0..15
     uint16_t selector; // a code segment selector in GDT or LDT
@@ -46,9 +84,5 @@ struct interrupt_frame {
 
 void idt_initialize(void);
 void idt_load(uint64_t address);
-
-extern void isr0(void); // div by 0
-extern void isr6(void); // invalid opcode
-extern void isr13(void);
 
 #endif

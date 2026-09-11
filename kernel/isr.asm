@@ -4,42 +4,77 @@
 	bits 64
 
 	section .text
+	%macro  ISR_NO_ERROR 1
+	global  isr%1
 
-	global isr0
-	global isr6
-	global isr13
-
-	extern interrupt_handler
-
-	; we push all gprs into rsp to preserve them before the interrupt call
-	; C can then use the registers however they want while handling the interrupt
-	; once its done with the interrupt, we pop all of them to return back to where we were
-	; ORDER OF REGISTERS IS IMPORTANT
-
-	; to implement an interrupt use the structure:
-	; push qword [error_code]
-	; push qword [vector]
-	; jmp isr_common
-
-isr0:
-	;    div by 0 exception
-	push qword 0; fake error code
-	push qword 0; vector number
-	jmp  isr_common
-
-isr6:
-	;    invalid opcode exception
+isr%1:
 	push qword 0
-	push qword 6
+	push qword %1
 	jmp  isr_common
+%endmacro
 
-isr13:
-	;    General Protection Fault
-	;    No pushing error code here as CPU provides one
-	push qword 13
+%macro ISR_ERROR 1
+global isr%1
+
+isr%1:
+	push qword %1
 	jmp  isr_common
+%endmacro
+
+global isr0
+global isr6
+global isr13
+
+extern interrupt_handler
+
+	ISR_NO_ERROR 0
+	ISR_NO_ERROR 1
+	ISR_NO_ERROR 2
+	ISR_NO_ERROR 3
+	ISR_NO_ERROR 4
+	ISR_NO_ERROR 5
+	ISR_NO_ERROR 6
+	ISR_NO_ERROR 7
+
+	ISR_ERROR 8
+
+	ISR_NO_ERROR 9
+
+	ISR_ERROR 10
+	ISR_ERROR 11
+	ISR_ERROR 12
+	ISR_ERROR 13
+	ISR_ERROR 14
+
+	ISR_NO_ERROR 15
+	ISR_NO_ERROR 16
+
+	ISR_ERROR 17
+
+	ISR_NO_ERROR 18
+	ISR_NO_ERROR 19
+	ISR_NO_ERROR 20
+
+	ISR_ERROR 21
+
+	ISR_NO_ERROR 22
+	ISR_NO_ERROR 23
+	ISR_NO_ERROR 24
+	ISR_NO_ERROR 25
+	ISR_NO_ERROR 26
+	ISR_NO_ERROR 27
+	ISR_NO_ERROR 28
+
+	ISR_ERROR 29
+	ISR_ERROR 30
+
+	ISR_NO_ERROR 31
 
 isr_common:
+	;    we push all gprs into rsp to preserve them before the interrupt call
+	;    C can then use the registers however they want while handling the interrupt
+	;    once its done with the interrupt, we pop all of them to return back to where we were
+	;    ORDER OF REGISTERS IS IMPORTANT
 	push rax
 	push rbx
 	push rcx
