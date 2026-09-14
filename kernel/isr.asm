@@ -21,10 +21,6 @@ isr%1:
 	jmp  isr_common
 %endmacro
 
-global isr0
-global isr6
-global isr13
-
 extern interrupt_handler
 
 	ISR_NO_ERROR 0
@@ -69,6 +65,7 @@ extern interrupt_handler
 	ISR_ERROR 30
 
 	ISR_NO_ERROR 31
+	ISR_NO_ERROR 32
 
 isr_common:
 	;    we push all gprs into rsp to preserve them before the interrupt call
@@ -94,7 +91,8 @@ isr_common:
 	mov rdi, rsp; save address of interrupt frame (arg 1 in c function)
 
 	test rsp, 8; rsp AND 0x8
-	;    this is set to 0 if its 16-bit aligned
+	;    check if rsp is 16-bit aligned
+	;    if bit 3 is set, rsp is 8 mod 16
 	jz   .aligned
 
 	;    otherwise, move down by 8 to align
@@ -109,8 +107,6 @@ isr_common:
 	call interrupt_handler
 
 .restore:
-
-	add rsp, 16; removes vector and error code
 
 	pop r15
 	pop r14
@@ -128,4 +124,5 @@ isr_common:
 	pop rbx
 	pop rax
 
+	add rsp, 16; removes vector and error code
 	iretq

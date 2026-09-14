@@ -35,7 +35,8 @@
     X(28)                                                                      \
     X(29)                                                                      \
     X(30)                                                                      \
-    X(31)
+    X(31)                                                                      \
+    X(32)
 
 #define X(n) extern void isr##n(void);
 ISR_LIST
@@ -81,6 +82,8 @@ struct interrupt_frame {
     uint64_t cs;
     uint64_t rflags;
 };
+
+uint64_t read_cr2(void);
 
 void idt_initialize(void);
 void idt_load(uint64_t address);

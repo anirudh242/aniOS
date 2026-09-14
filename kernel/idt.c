@@ -1,4 +1,5 @@
 #include "idt.h"
+#include "io.h"
 #include "terminal.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -33,10 +34,12 @@ static const char *exception_names[32] = {
     [21] = "Control Protection Exception",
 };
 
+static int timer_ticks = 0;
+
 typedef void (*isr_handler_t)(void);
 
 #define X(n) isr##n,
-static isr_handler_t isr_handlers[32] = {ISR_LIST};
+static isr_handler_t isr_handlers[33] = {ISR_LIST};
 #undef X
 
 static void idt_set_gate(int vector, uint64_t handler) {
@@ -59,7 +62,7 @@ void idt_initialize(void) {
         idt[i].offset_3 = 0;
     }
 
-    for (size_t i = 0; i < 32; i++) {
+    for (size_t i = 0; i < 33; i++) {
         idt_set_gate(i, (uint64_t)isr_handlers[i]);
     }
 
@@ -70,6 +73,15 @@ void idt_initialize(void) {
 }
 
 void interrupt_handler(struct interrupt_frame *frame) {
+    if (frame->vector == 32) {
+        timer_ticks++;
+        if (timer_ticks % 100 == 0) {
+            terminal_write("TICK\n");
+        }
+        outb(0x20, 0x20); // EOI to master PIC
+        return;
+    }
+
     if (frame->vector < 32 && exception_names[frame->vector]) {
         terminal_write("EXCEPTION: ");
         terminal_write(exception_names[frame->vector]);
@@ -85,6 +97,12 @@ void interrupt_handler(struct interrupt_frame *frame) {
     terminal_write("RIP: ");
     terminal_write_hex(frame->rip);
     terminal_putchar('\n');
+
+    if (frame->vector == 14) {
+        terminal_write("Faulting address: ");
+        terminal_write_hex(read_cr2());
+        terminal_putchar('\n');
+    }
 
     terminal_write("SYSTEM HALTED\n");
 
