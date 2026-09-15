@@ -17,11 +17,11 @@ void kernel_main(void) {
     pit_init(100);
     asm volatile("sti");
 
-    terminal_write("Before sleep\n");
-
-    timer_sleep(200);
-
-    terminal_write("After sleep\n");
+    // terminal_write("Before sleep\n");
+    //
+    // timer_sleep(200);
+    //
+    // terminal_write("After sleep\n");
 
     // asm volatile("int $0");
     // volatile int a = 10;

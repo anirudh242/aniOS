@@ -31,6 +31,6 @@ void pic_remap(void) {
     outb(PIC2_DATA, 0x01);
 
     // Mask all IRQs (for now)
-    outb(PIC1_DATA, 0xFE);
+    outb(PIC1_DATA, 0xFC);
     outb(PIC2_DATA, 0xFF);
 }

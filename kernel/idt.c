@@ -10,7 +10,7 @@
 static struct idt_entry idt[256];
 static struct idt_descriptor idt_descriptor;
 
-static const char *exception_names[32] = {
+static const char *exception_names[33] = {
     [0] = "Divide Error",
     [1] = "Debug",
     [2] = "Non-Maskable Interrupt",
@@ -38,7 +38,7 @@ static const char *exception_names[32] = {
 typedef void (*isr_handler_t)(void);
 
 #define X(n) isr##n,
-static isr_handler_t isr_handlers[33] = {ISR_LIST};
+static isr_handler_t isr_handlers[34] = {ISR_LIST};
 #undef X
 
 static void idt_set_gate(int vector, uint64_t handler) {
@@ -61,7 +61,7 @@ void idt_initialize(void) {
         idt[i].offset_3 = 0;
     }
 
-    for (size_t i = 0; i < 33; i++) {
+    for (size_t i = 0; i < 34; i++) {
         idt_set_gate(i, (uint64_t)isr_handlers[i]);
     }
 
@@ -71,35 +71,54 @@ void idt_initialize(void) {
     idt_load((uint64_t)&idt_descriptor);
 }
 
+// outb(0x20, 0x20) sends END OF INTERRUPT (EOI) signal to master PIC
 void interrupt_handler(struct interrupt_frame *frame) {
-    if (frame->vector == 32) {
+    uint64_t fvec = frame->vector;
+
+    // REMINDER: IRQ 32 and up are standard ISA IRQS starting where IRQ 32 is
+    // mapped to 0, 33 to 1, and so on.
+
+    // pit interrupt
+    if (fvec == 32) {
         timer_tick();
 
-        if (timer_get_ticks() % 100 == 0) {
-            // terminal_write("TICK\n");
-        }
+        // if (timer_get_ticks() % 100 == 0) {
+        // terminal_write("TICK\n");
+        // }
 
-        outb(0x20, 0x20); // EOI to master PIC
+        outb(0x20, 0x20);
         return;
     }
 
-    if (frame->vector < 32 && exception_names[frame->vector]) {
+    // keyboard
+    if (fvec == 33) {
+        uint64_t scancode = inb(0x60); // keyboard controller data port
+
+        terminal_write("KEYBOARD IRQ:");
+        terminal_write_hex(scancode);
+        terminal_write("\n");
+
+        outb(0x20, 0x20);
+        return;
+    }
+
+    if (fvec < 32 && exception_names[fvec]) {
         terminal_write("EXCEPTION: ");
-        terminal_write(exception_names[frame->vector]);
+        terminal_write(exception_names[fvec]);
         terminal_write("\n");
     } else {
         terminal_write("EXCEPTION: Unknown\n");
     }
 
     terminal_write("Vector: ");
-    terminal_write_hex(frame->vector);
+    terminal_write_hex(fvec);
     terminal_putchar('\n');
 
     terminal_write("RIP: ");
     terminal_write_hex(frame->rip);
     terminal_putchar('\n');
 
-    if (frame->vector == 14) {
+    if (fvec == 14) {
         terminal_write("Faulting address: ");
         terminal_write_hex(read_cr2());
         terminal_putchar('\n');

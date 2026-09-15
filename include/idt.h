@@ -36,7 +36,8 @@
     X(29)                                                                      \
     X(30)                                                                      \
     X(31)                                                                      \
-    X(32)
+    X(32)                                                                      \
+    X(33)
 
 #define X(n) extern void isr##n(void);
 ISR_LIST

@@ -66,6 +66,7 @@ extern interrupt_handler
 
 	ISR_NO_ERROR 31
 	ISR_NO_ERROR 32
+	ISR_NO_ERROR 33
 
 isr_common:
 	;    we push all gprs into rsp to preserve them before the interrupt call
