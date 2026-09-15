@@ -3,3 +3,4 @@ kernel.elf
 anios.iso
 iso/boot/kernel.elf
 compile_flags.txt
+build/

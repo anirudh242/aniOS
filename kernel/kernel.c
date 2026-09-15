@@ -3,7 +3,9 @@
 #include "pic.h"
 #include "pit.h"
 #include "terminal.h"
+#include "timer.h"
 #include <stdint.h>
+
 void kernel_main(void) {
     terminal_initialize();
 
@@ -14,6 +16,12 @@ void kernel_main(void) {
     pic_remap();
     pit_init(100);
     asm volatile("sti");
+
+    terminal_write("Before sleep\n");
+
+    timer_sleep(200);
+
+    terminal_write("After sleep\n");
 
     // asm volatile("int $0");
     // volatile int a = 10;
@@ -41,5 +49,5 @@ void kernel_main(void) {
     // (void)value;
 
     // outb(0x80, 0);
-    uint8_t value = inb(0x21);
+    // uint8_t value = inb(0x21);
 }

@@ -1,6 +1,7 @@
 #include "idt.h"
 #include "io.h"
 #include "terminal.h"
+#include "timer.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -33,8 +34,6 @@ static const char *exception_names[32] = {
     [20] = "Virtualization Exception",
     [21] = "Control Protection Exception",
 };
-
-static int timer_ticks = 0;
 
 typedef void (*isr_handler_t)(void);
 
@@ -74,10 +73,12 @@ void idt_initialize(void) {
 
 void interrupt_handler(struct interrupt_frame *frame) {
     if (frame->vector == 32) {
-        timer_ticks++;
-        if (timer_ticks % 100 == 0) {
-            terminal_write("TICK\n");
+        timer_tick();
+
+        if (timer_get_ticks() % 100 == 0) {
+            // terminal_write("TICK\n");
         }
+
         outb(0x20, 0x20); // EOI to master PIC
         return;
     }

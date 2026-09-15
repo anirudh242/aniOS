@@ -1,56 +1,100 @@
-AS = nasm
-CC = gcc
-LD = ld
+AS      := nasm
+CC      := gcc
+LD      := ld
+GRUB    := grub-mkrescue
+QEMU    := qemu-system-x86_64
 
-CFLAGS = -g -ffreestanding -mno-red-zone -m64 -Iinclude
-LDFLAGS = -m elf_x86_64 -T linker.ld
-ASFLAGS = -f elf64 -g -F dwarf
+# Directories
+BUILD   := build
+ISO_DIR := iso
 
-all: kernel.elf
+# Output files
+KERNEL  := $(BUILD)/kernel.elf
+ISO     := anios.iso
 
-boot.o: boot/boot.asm
-	$(AS) $(ASFLAGS) boot/boot.asm -o boot.o
+# Source files
+C_SRCS   := $(wildcard kernel/*.c)
+ASM_SRCS := $(wildcard boot/*.asm kernel/*.asm)
 
-kernel.o: kernel/kernel.c
-	$(CC) $(CFLAGS) -c kernel/kernel.c -o kernel.o
+C_OBJS   := $(patsubst %.c,$(BUILD)/%.o,$(C_SRCS))
+ASM_OBJS := $(patsubst %.asm,$(BUILD)/%.o,$(ASM_SRCS))
 
-terminal.o: kernel/terminal.c
-	$(CC) $(CFLAGS) -c kernel/terminal.c -o terminal.o
+OBJS := $(ASM_OBJS) $(C_OBJS)
+DEPS := $(OBJS:.o=.d)
 
-idt.o: kernel/idt.c
-	$(CC) $(CFLAGS) -c kernel/idt.c -o idt.o
+# Compiler flags
+CFLAGS := \
+	-g \
+	-ffreestanding \
+	-mno-red-zone \
+	-m64 \
+	-Iinclude \
+	-Wall \
+	-Wextra \
+	-Wpedantic \
+	-MMD \
+	-MP
 
-idt_load.o: kernel/idt_load.asm
-	$(AS) $(ASFLAGS) kernel/idt_load.asm -o idt_load.o
+# Assembler flags
+ASFLAGS := \
+	-f elf64 \
+	-g \
+	-F dwarf
 
-isr.o: kernel/isr.asm
-	$(AS) $(ASFLAGS) kernel/isr.asm -o isr.o
+# Linker flags
+LDFLAGS := \
+	-m elf_x86_64 \
+	-T linker.ld
 
-read_cr2.o: kernel/read_cr2.asm
-	$(AS) $(ASFLAGS) kernel/read_cr2.asm -o read_cr2.o
+# QEMU flags
+QEMU_FLAGS := \
+	-cdrom $(ISO) \
+	-display gtk \
+	-no-reboot
 
-io.o: kernel/io.asm
-	$(AS) $(ASFLAGS) kernel/io.asm -o io.o
+# Default target
+.PHONY: all
+all: $(ISO)
 
-pic.o: kernel/pic.c
-	$(CC) $(CFLAGS) -c kernel/pic.c -o pic.o
+# Compile C files
+$(BUILD)/%.o: %.c
+	@mkdir -p $(dir $@)
+	@echo "  CC      $<"
+	$(CC) $(CFLAGS) -c $< -o $@
 
-pit.o: kernel/pit.c
-	$(CC) $(CFLAGS) -c kernel/pit.c -o pit.o
+# Assemble ASM files
+$(BUILD)/%.o: %.asm
+	@mkdir -p $(dir $@)
+	@echo "  AS      $<"
+	$(AS) $(ASFLAGS) $< -o $@
 
-kernel.elf: boot.o kernel.o terminal.o idt.o idt_load.o isr.o read_cr2.o io.o pic.o pit.o linker.ld
-	$(LD) $(LDFLAGS) -o kernel.elf boot.o terminal.o idt.o idt_load.o isr.o read_cr2.o kernel.o io.o pic.o pit.o
+# Link the kernel
+$(KERNEL): $(OBJS) linker.ld
+	@mkdir -p $(dir $@)
+	@echo "  LD      $@"
+	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
-iso: kernel.elf
-	cp kernel.elf iso/boot/kernel.elf
-	grub-mkrescue -o anios.iso iso
+# Create the ISO
+$(ISO): $(KERNEL)
+	@echo "  ISO     $@"
+	cp $(KERNEL) $(ISO_DIR)/boot/kernel.elf
+	$(GRUB) -o $@ $(ISO_DIR)
 
-run: iso
-	DISPLAY=:1 qemu-system-x86_64 -cdrom anios.iso -display gtk
+# Run aniOS
+.PHONY: run
+run: $(ISO)
+	DISPLAY=:1 $(QEMU) $(QEMU_FLAGS)
 
-debug: iso
-	# DISPLAY=:1 qemu-system-x86_64 -cdrom anios.iso -display gtk -S -s
-	DISPLAY=:1 qemu-system-x86_64 -cdrom anios.iso -display gtk -S -s -no-reboot
+# Run aniOS with GDB
+.PHONY: debug
+debug: $(ISO)
+	DISPLAY=:1 $(QEMU) $(QEMU_FLAGS) -S -s
 
+# Remove build files
+.PHONY: clean
 clean:
-	rm -f *.o kernel.elf anios.iso
+	@echo "  CLEAN"
+	rm -rf $(BUILD) $(ISO)
+
+# Include generated dependencies
+-include $(DEPS)
