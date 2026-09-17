@@ -1,5 +1,6 @@
 #include "idt.h"
 #include "io.h"
+#include "keyboard.h"
 #include "terminal.h"
 #include "timer.h"
 #include <stddef.h>
@@ -94,9 +95,11 @@ void interrupt_handler(struct interrupt_frame *frame) {
     if (fvec == 33) {
         uint64_t scancode = inb(0x60); // keyboard controller data port
 
-        terminal_write("KEYBOARD IRQ:");
-        terminal_write_hex(scancode);
-        terminal_write("\n");
+        // terminal_write("KEYBOARD IRQ:");
+        // terminal_write_hex(scancode);
+        // terminal_write("\n");
+
+        kb_handle_sc(scancode);
 
         outb(0x20, 0x20);
         return;
