@@ -2,6 +2,7 @@
 #include "io.h"
 #include "pic.h"
 #include "pit.h"
+#include "shell.h"
 #include "terminal.h"
 #include "timer.h"
 #include <stdint.h>
@@ -9,8 +10,10 @@
 void kernel_main(void) {
     terminal_initialize();
 
-    terminal_write("aniOS\n");
+    // terminal_write("aniOS\n");
     terminal_write("64-bit kernel initialized\n");
+
+    shell_initialize();
 
     idt_initialize();
     pic_remap();

@@ -83,12 +83,12 @@ $(ISO): $(KERNEL)
 # Run aniOS
 .PHONY: run
 run: $(ISO)
-	DISPLAY=:1 $(QEMU) $(QEMU_FLAGS)
+	$(QEMU) $(QEMU_FLAGS)
 
 # Run aniOS with GDB
 .PHONY: debug
 debug: $(ISO)
-	DISPLAY=:1 $(QEMU) $(QEMU_FLAGS) -S -s
+	$(QEMU) $(QEMU_FLAGS) -S -s
 
 # Remove build files
 .PHONY: clean
